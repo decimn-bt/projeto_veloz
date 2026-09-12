@@ -1,0 +1,69 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Histórico de consumos do estoque.">
+    <title>Histórico de Consumo</title>
+    <link rel="stylesheet" href="{% static 'estoque/style.css' %}">
+</head>
+<body>
+    <main class="container">
+        <header>
+            <span class="tag">RESTAURANTE</span>
+            <h1>Histórico de consumo</h1>
+            <p>Cada operação de consumo fica registrada com data, usuário e evolução do estoque.</p>
+        </header>
+
+        <section class="card search-card">
+            <form method="get" action="{% url 'historico_consumos' %}" class="search-form">
+                <label for="q">Buscar no histórico</label>
+                <input id="q" name="q" type="search" maxlength="100" value="{{ query }}" placeholder="Ingrediente ou usuário">
+                <button type="submit">Buscar</button>
+                {% if query %}<a href="{% url 'historico_consumos' %}">Limpar</a>{% endif %}
+            </form>
+        </section>
+
+        <section class="card">
+            <div class="section-heading">
+                <div>
+                    <span class="label">Registros</span>
+                    <h2>Movimentações</h2>
+                </div>
+                <a class="admin" href="{% url 'lista_compras' %}">Voltar ao estoque</a>
+            </div>
+
+            {% if historico %}
+                <div class="history-list">
+                    {% for registro in historico %}
+                        <article class="history-row">
+                            <div>
+                                <strong>{{ registro.ingrediente.nome }}</strong>
+                                <span>{{ registro.registrado_em|date:"d/m/Y H:i" }}</span>
+                            </div>
+                            <div>
+                                <span class="label">Consumo</span>
+                                <strong>{{ registro.quantidade }} {{ registro.unidade }}</strong>
+                            </div>
+                            <div>
+                                <span class="label">Estoque</span>
+                                <strong>{{ registro.estoque_anterior }} → {{ registro.estoque_posterior }} {{ registro.unidade }}</strong>
+                            </div>
+                            <div>
+                                <span class="label">Usuário</span>
+                                <strong>{% if registro.usuario %}{{ registro.usuario.username }}{% else %}Sistema{% endif %}</strong>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="vazio">
+                    <h2>Nenhum consumo registrado</h2>
+                    <p>As próximas movimentações aparecerão aqui automaticamente.</p>
+                </div>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

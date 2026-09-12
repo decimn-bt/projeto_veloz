@@ -1,0 +1,99 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Controle de estoque e lista de compras do restaurante.">
+    <title>Controle de Estoque</title>
+    <link rel="stylesheet" href="{% static 'estoque/style.css' %}">
+</head>
+<body>
+    <main class="container">
+        <header>
+            <span class="tag">RESTAURANTE</span>
+            <h1>Controle de estoque</h1>
+            <p>Reposição calculada automaticamente com base na meta, estoque e consumo.</p>
+        </header>
+
+        {% if messages %}
+            <section class="messages" aria-live="polite">
+                {% for message in messages %}
+                    <div class="message {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </section>
+        {% endif %}
+
+        <section class="card search-card">
+            <form method="get" action="{% url 'lista_compras' %}" class="search-form">
+                <label for="q">Buscar ingrediente</label>
+                <input id="q" name="q" type="search" maxlength="100" value="{{ query }}" placeholder="Ex.: Farinha">
+                <button type="submit">Buscar</button>
+                {% if query %}<a href="{% url 'lista_compras' %}">Limpar</a>{% endif %}
+            </form>
+        </section>
+
+        <section class="card">
+            <div class="section-heading">
+                <div>
+                    <span class="label">Reposição</span>
+                    <h2>Lista de compras</h2>
+                </div>
+            </div>
+            {% if compras %}
+                <div class="lista">
+                    {% for item in compras %}
+                        <div class="item">
+                            <div>
+                                <span class="label">Ingrediente</span>
+                                <strong>{{ item.ingrediente }}</strong>
+                            </div>
+                            <div class="quantidade">
+                                <span class="label">Comprar</span>
+                                <strong>{{ item.quantidade }} {{ item.unidade }}</strong>
+                            </div>
+                        </div>
+                        <p class="saida">Comprar: {{ item.quantidade }} {{ item.unidade }} de {{ item.ingrediente }}</p>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="vazio">
+                    <h2>Nenhuma compra necessária</h2>
+                    <p>Não há itens que exijam reposição para os dados encontrados.</p>
+                </div>
+            {% endif %}
+        </section>
+
+        {% if user.is_staff %}
+            <section class="card stock-card">
+                <div class="section-heading">
+                    <div>
+                        <span class="label">Operação protegida</span>
+                        <h2>Registrar consumo</h2>
+                    </div>
+                    <div class="header-actions"><a class="admin" href="{% url 'historico_consumos' %}">Histórico</a><a class="admin" href="/admin/">Administração</a></div>
+                </div>
+                <div class="stock-list">
+                    {% for ingrediente in ingredientes %}
+                        <form method="post" action="{% url 'consumir_ingrediente' ingrediente.id %}" class="stock-row">
+                            {% csrf_token %}
+                            <div>
+                                <strong>{{ ingrediente.nome }}</strong>
+                                <span>{{ ingrediente.estoque_atual }} {{ ingrediente.unidade }} disponíveis</span>
+                            </div>
+                            <div class="stock-action">
+                                <input name="quantidade" type="number" min="0.01" max="{{ ingrediente.estoque_atual }}" step="0.01" inputmode="decimal" required aria-label="Quantidade consumida de {{ ingrediente.nome }}">
+                                <button type="submit">Consumir</button>
+                            </div>
+                        </form>
+                    {% empty %}
+                        <p class="vazio-texto">Nenhum ingrediente cadastrado.</p>
+                    {% endfor %}
+                </div>
+            </section>
+        {% else %}
+            <div class="header-actions"><a class="admin" href="/admin/">Área administrativa</a></div>
+        {% endif %}
+    </main>
+</body>
+</html>
